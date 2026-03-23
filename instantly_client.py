@@ -36,6 +36,22 @@ def _get(endpoint: str, params: dict = None) -> dict:
         return {}
 
 
+def _patch(endpoint: str, payload: dict) -> dict:
+    """Make authenticated PATCH request."""
+    try:
+        r = requests.patch(
+            f"{BASE_URL}{endpoint}",
+            headers=_headers(),
+            json=payload,
+            timeout=30,
+        )
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print(f"  [instantly] PATCH {endpoint} error: {e}")
+        return {}
+
+
 def _post(endpoint: str, payload: dict) -> dict:
     """Make authenticated POST request."""
     try:
@@ -82,11 +98,30 @@ def get_or_create_campaign(
             return cid
 
     # Create new campaign
+    # Note: Instantly v2 requires 'days' as {"1": true, ...} and
+    # timezone as IANA like "America/Detroit" (not all IANA zones accepted)
     payload = {
         "name": name,
-        "daily_limit": daily_limit,
-        "stop_on_reply": True,
-        "email_gap": 10,
+        "campaign_schedule": {
+            "schedules": [{
+                "name": "Weekday mornings",
+                "timing": {"from": "09:00", "to": "11:00"},
+                "days": {"1": True, "2": True, "3": True, "4": True, "5": True},
+                "timezone": "America/Detroit",
+            }],
+        },
+    }
+
+    data = _post("/campaigns", payload)
+    cid = data.get("id")
+    if not cid:
+        print(f"  [instantly] Failed to create campaign")
+        return None
+
+    print(f"  [instantly] Created campaign: {cid}")
+
+    # Add email sequence with personalization variables
+    _patch(f"/campaigns/{cid}", {
         "sequences": [{
             "steps": [{
                 "type": "email",
@@ -97,30 +132,8 @@ def get_or_create_campaign(
                 }],
             }],
         }],
-        "campaign_schedule": {
-            "schedules": [{
-                "name": "Weekday mornings",
-                "timing": {"from": "09:00", "to": "11:00"},
-                "days": {
-                    "monday": True,
-                    "tuesday": True,
-                    "wednesday": True,
-                    "thursday": True,
-                    "friday": False,
-                    "saturday": False,
-                    "sunday": False,
-                },
-                "timezone": "America/New_York",
-            }],
-        },
-    }
+    })
 
-    data = _post("/campaigns", payload)
-    cid = data.get("id")
-    if cid:
-        print(f"  [instantly] Created campaign: {cid}")
-    else:
-        print(f"  [instantly] Failed to create campaign")
     return cid
 
 
@@ -137,12 +150,14 @@ def add_lead(campaign_id: str, investor: dict) -> str:
         print(f"  [instantly] No valid email for {investor.get('first_name', '?')}")
         return None
 
+    # Instantly v2: use 'campaign' (not 'campaign_id') at top level,
+    # and 'custom_variables' for personalization merge fields.
     payload = {
-        "campaign_id": campaign_id,
         "email": email,
         "first_name": investor.get("first_name", ""),
         "last_name": investor.get("last_name", ""),
         "company_name": investor.get("company", ""),
+        "campaign": campaign_id,
         "custom_variables": {
             "subject_line": investor.get("subject_a", ""),
             "email_body": investor.get("email_body", ""),
