@@ -44,6 +44,16 @@ TIER3_KEYWORDS = [
     "early stage", "emerging", "syndicate",
 ]
 
+# ── VC titles — anyone with these is at minimum Tier 3 ──────
+VC_TITLES = [
+    "venture", "vc ", "vc,", "partner", "principal",
+    "investor", "angel", "fund", "capital",
+    "managing director", "general partner",
+    "investment", "portfolio", "scout",
+    "associate", "analyst", "fellow",
+    "founding partner", "venture partner",
+]
+
 # ── SKIP signals ─────────────────────────────────────────────
 SKIP_TITLES = [
     "recruiter", "recruiting", "talent acquisition",
@@ -133,6 +143,16 @@ def score_investor(row: dict) -> dict:
         )
         if len(kw_matches) >= 3:
             score = 5
+
+    # ── TIER 3 fallback: Anyone with VC/investor title ──
+    elif _match_any(f"{title} {bio}", VC_TITLES):
+        tier = 3
+        score = 4
+        investor_type = "VC_INVESTOR"
+        hook = (
+            f"Given your work at {company}, "
+            f"I thought Aonxi would be worth 20 minutes."
+        )
 
     # ── CHANNEL logic ────────────────────────────────
     has_linkedin = bool(linkedin and "linkedin.com" in linkedin)

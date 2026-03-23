@@ -99,12 +99,16 @@ def get_or_create_campaign(
         }],
         "campaign_schedule": {
             "schedules": [{
+                "name": "Weekday mornings",
                 "timing": {"from": "09:00", "to": "11:00"},
                 "days": {
                     "monday": True,
                     "tuesday": True,
                     "wednesday": True,
                     "thursday": True,
+                    "friday": False,
+                    "saturday": False,
+                    "sunday": False,
                 },
                 "timezone": "America/New_York",
             }],
