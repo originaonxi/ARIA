@@ -203,21 +203,356 @@ def cmd_status():
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 
-def cmd_load(csv_path: str):
-    """Load CSV into database."""
-    if not os.path.exists(csv_path):
-        print(f"ERROR: File not found: {csv_path}")
+def _smart_read_file(file_path: str):
+    """Read any CSV or Excel file into a list of normalized investor dicts."""
+    import re
+    import pandas as pd
+
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext in (".xlsx", ".xls"):
+        df = pd.read_excel(file_path)
+    else:
+        df = pd.read_csv(file_path)
+
+    # ── Column mapping: find the best match for each field ──
+    col_lower = {c: c.lower().strip() for c in df.columns}
+
+    def _find_col(*candidates):
+        """Find first matching column name (case-insensitive, partial match)."""
+        for c, cl in col_lower.items():
+            for cand in candidates:
+                if cand == cl or cand in cl:
+                    return c
+        return None
+
+    email_col = _find_col(
+        "email", "mail", "e-mail", "email address", "work email",
+        "enriched email", "contact_email", "contact email",
+        "custom address", "personal email",
+    )
+    first_col = _find_col("first name", "first_name", "firstname", "first")
+    last_col = _find_col("last name", "last_name", "lastname", "last")
+    full_name_col = _find_col("full name", "full_name", "fullname", "contact person", "name")
+    company_col = _find_col(
+        "company", "organization", "firm", "company name",
+        "company_name", "account",
+    )
+    title_col = _find_col(
+        "title", "job title", "job_title", "designation",
+        "position", "role",
+    )
+    linkedin_col = _find_col(
+        "linkedin", "linkedin url", "linkedin_url",
+        "person linkedin url", "profile url", "li url",
+    )
+    location_col = _find_col(
+        "location", "city", "region", "geography",
+    )
+    bio_col = _find_col(
+        "headline", "bio", "about", "summary", "description",
+    )
+
+    investors = []
+    for _, row in df.iterrows():
+        # Extract email — handle "Name <email>" format
+        raw_email = ""
+        if email_col and pd.notna(row.get(email_col)):
+            raw_email = str(row[email_col]).strip()
+        email = ""
+        if raw_email and "@" in raw_email:
+            match = re.search(r'[\w.+-]+@[\w.-]+\.\w+', raw_email)
+            if match:
+                email = match.group(0).lower()
+
+        # Extract names
+        first = ""
+        last = ""
+        if first_col and pd.notna(row.get(first_col)):
+            first = str(row[first_col]).strip()
+        if last_col and pd.notna(row.get(last_col)):
+            last = str(row[last_col]).strip()
+        if not first and full_name_col and pd.notna(row.get(full_name_col)):
+            parts = str(row[full_name_col]).strip().split(" ", 1)
+            first = parts[0]
+            last = parts[1] if len(parts) > 1 else ""
+
+        # Skip rows with no name at all
+        if not first and not last:
+            continue
+        # Skip "Team" or "nan" names
+        if first.lower() in ("nan", "none", ""):
+            continue
+
+        company = ""
+        if company_col and pd.notna(row.get(company_col)):
+            company = str(row[company_col]).strip()
+
+        title = ""
+        if title_col and pd.notna(row.get(title_col)):
+            title = str(row[title_col]).strip()
+
+        linkedin = ""
+        if linkedin_col and pd.notna(row.get(linkedin_col)):
+            val = str(row[linkedin_col]).strip()
+            if "linkedin.com" in val:
+                linkedin = val
+
+        location = ""
+        if location_col and pd.notna(row.get(location_col)):
+            location = str(row[location_col]).strip()
+
+        bio = ""
+        if bio_col and pd.notna(row.get(bio_col)):
+            bio = str(row[bio_col]).strip()[:500]
+        if not bio and title and company:
+            bio = f"{title} at {company}"
+
+        investors.append({
+            "email": email,
+            "first_name": first,
+            "last_name": last,
+            "title": title or "Investor",
+            "company": company,
+            "linkedin_url": linkedin,
+            "location": location,
+            "bio": bio,
+            "source": os.path.basename(file_path),
+        })
+
+    return investors
+
+
+def load_and_launch(file_path: str):
+    """
+    One command to do everything:
+    Read → Normalize → Dedup → Verify → Score → Write → Create Campaign → Send → Launch
+    """
+    import requests
+    from config import INSTANTLY_API_KEY
+
+    if not os.path.exists(file_path):
+        print(f"ERROR: File not found: {file_path}")
         sys.exit(1)
 
-    print(f"Loading {csv_path}...")
-    stats = db.load_from_csv(csv_path)
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    print("CSV IMPORT COMPLETE")
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    print(f"  Added:      {stats['added']}")
-    print(f"  Duplicates: {stats['duplicates']}")
-    print(f"  Skipped:    {stats['skipped']}")
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    filename = os.path.basename(file_path)
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print(f"ARIA LOAD — {filename}")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+    # ── STEP 1: Read + Normalize ─────────────────────────
+    print(f"\n[1/8] READING FILE...")
+    investors = _smart_read_file(file_path)
+    total_read = len(investors)
+    with_email = sum(1 for i in investors if i.get("email"))
+    print(f"  Rows: {total_read} | With email: {with_email}")
+
+    # ── STEP 2: Dedup + Insert ───────────────────────────
+    print(f"\n[2/8] DEDUPLICATING...")
+    added_ids = []
+    duplicates = 0
+    skipped = 0
+    for inv in investors:
+        if not inv.get("email") and not inv.get("linkedin_url"):
+            skipped += 1
+            continue
+        success, result = db.add_investor(inv)
+        if success:
+            added_ids.append(result)
+        elif "dup" in result:
+            duplicates += 1
+        else:
+            skipped += 1
+    print(f"  Added: {len(added_ids)} | Duplicates: {duplicates} | Skipped: {skipped}")
+
+    if not added_ids:
+        print("\n  No new investors to process.")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        return
+
+    # ── STEP 3: Verify Emails ────────────────────────────
+    print(f"\n[3/8] VERIFYING EMAILS (Millionverifier)...")
+    verify_stats = verify_batch(limit=len(added_ids) + 50)
+    valid_count = verify_stats["valid"]
+    invalid_count = verify_stats["invalid"]
+    print(f"  Valid: {valid_count} | Invalid: {invalid_count}")
+
+    # ── STEP 4: Score ────────────────────────────────────
+    print(f"\n[4/8] SCORING...")
+    unscored = db.get_unscored(limit=5000)
+    tier_counts = {1: 0, 2: 0, 3: 0, 0: 0}
+    for inv in unscored:
+        scored = score_investor(inv)
+        if scored["go"]:
+            db.mark_scored(
+                inv["id"], scored["tier"], scored["score"],
+                scored["investor_type"], scored["channel"],
+                scored["personalization_hook"],
+            )
+            tier_counts[scored["tier"]] = tier_counts.get(scored["tier"], 0) + 1
+        else:
+            db.update_investor(inv["id"], {"tier": 0, "score": scored.get("score", 0), "status": "SKIPPED"})
+            tier_counts[0] += 1
+    go_count = tier_counts.get(1, 0) + tier_counts.get(2, 0) + tier_counts.get(3, 0)
+    print(f"  T1: {tier_counts.get(1, 0)} | T2: {tier_counts.get(2, 0)} | T3: {tier_counts.get(3, 0)} | Skip: {tier_counts.get(0, 0)}")
+
+    # ── STEP 5: Write Emails ─────────────────────────────
+    print(f"\n[5/8] WRITING EMAILS (Claude Haiku)...")
+    from aria_db import get_unwritten
+    unwritten = get_unwritten(limit=500)
+    written = 0
+    write_errors = 0
+    for inv in unwritten:
+        try:
+            email_data = write_cold_email(inv)
+            db.mark_written(
+                inv["id"],
+                email_data["subject_a"], email_data["subject_b"],
+                email_data["body"], None,
+                email_data["predicted_reply_tier"],
+            )
+            written += 1
+        except Exception as e:
+            write_errors += 1
+    print(f"  Written: {written} | Errors: {write_errors}")
+
+    # ── STEP 6: Create Instantly Campaign ─────────────────
+    print(f"\n[6/8] CREATING INSTANTLY CAMPAIGN...")
+    campaign_name = f"ARIA — {today} — {os.path.splitext(filename)[0]}"
+
+    campaign_id = None
+    if INSTANTLY_API_KEY:
+        headers = {
+            "Authorization": f"Bearer {INSTANTLY_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        # Create campaign
+        r = requests.post(
+            "https://api.instantly.ai/api/v2/campaigns",
+            headers=headers,
+            json={
+                "name": campaign_name,
+                "campaign_schedule": {
+                    "schedules": [{
+                        "name": "Weekday mornings",
+                        "timing": {"from": "09:00", "to": "11:00"},
+                        "days": {"1": True, "2": True, "3": True, "4": True, "5": True},
+                        "timezone": "America/Detroit",
+                    }],
+                },
+            },
+            timeout=15,
+        )
+        if r.status_code == 200:
+            campaign_id = r.json().get("id")
+            print(f"  Created: {campaign_name}")
+
+            # Add sequence
+            requests.patch(
+                f"https://api.instantly.ai/api/v2/campaigns/{campaign_id}",
+                headers=headers,
+                json={
+                    "sequences": [{
+                        "steps": [{
+                            "type": "email",
+                            "delay": 0,
+                            "variants": [{
+                                "subject": "{{subject_line}}",
+                                "body": "{{email_body}}",
+                            }],
+                        }],
+                    }],
+                },
+                timeout=15,
+            )
+        else:
+            # Fallback: find existing ARIA campaign
+            print(f"  Campaign creation failed — using fallback...")
+            r2 = requests.get(
+                "https://api.instantly.ai/api/v2/campaigns",
+                headers=headers,
+                params={"limit": 50},
+                timeout=15,
+            )
+            if r2.status_code == 200:
+                for c in r2.json().get("items", []):
+                    if "ARIA" in c.get("name", ""):
+                        campaign_id = c["id"]
+                        campaign_name = c["name"]
+                        print(f"  Using existing: {campaign_name}")
+                        break
+    else:
+        print("  No Instantly API key — skipping send")
+
+    # ── STEP 7: Add Leads to Campaign ─────────────────────
+    pushed = 0
+    if campaign_id and INSTANTLY_API_KEY:
+        print(f"\n[7/8] PUSHING TO INSTANTLY...")
+        ready = db.get_ready_to_contact(limit=500)
+        for inv in ready:
+            r = requests.post(
+                "https://api.instantly.ai/api/v2/leads",
+                headers=headers,
+                json={
+                    "email": inv["email"],
+                    "first_name": inv.get("first_name", ""),
+                    "last_name": inv.get("last_name", ""),
+                    "company_name": inv.get("company", ""),
+                    "campaign": campaign_id,
+                    "custom_variables": {
+                        "subject_line": str(inv.get("subject_a", "")),
+                        "email_body": str(inv.get("email_body", "")),
+                    },
+                },
+                timeout=15,
+            )
+            if r.status_code == 200:
+                lead_id = r.json().get("id", "")
+                db.mark_contacted(inv["id"], "EMAIL", inv["subject_a"], inv["email_body"], lead_id)
+                pushed += 1
+        print(f"  Pushed: {pushed}")
+    else:
+        print(f"\n[7/8] SKIPPED — no campaign available")
+
+    # ── STEP 8: Launch ────────────────────────────────────
+    status_text = "READY"
+    if campaign_id and pushed > 0 and INSTANTLY_API_KEY:
+        print(f"\n[8/8] LAUNCHING CAMPAIGN...")
+        r = requests.post(
+            f"https://api.instantly.ai/api/v2/campaigns/{campaign_id}/activate",
+            headers=headers,
+            json={},
+            timeout=15,
+        )
+        if r.status_code == 200:
+            status_text = "LAUNCHED"
+            print(f"  Campaign is LIVE")
+        else:
+            status_text = "DRAFT — launch manually in Instantly"
+            print(f"  Auto-launch failed ({r.status_code}) — launch manually in Instantly")
+    else:
+        print(f"\n[8/8] SKIPPED")
+
+    # ── FINAL SUMMARY ─────────────────────────────────────
+    print()
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("ARIA LOAD COMPLETE")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print(f"  File:               {filename}")
+    print(f"  Loaded:             {len(added_ids)}")
+    print(f"  Duplicates skipped: {duplicates}")
+    print(f"  Bad emails removed: {invalid_count}")
+    print(f"  Emails written:     {written}")
+    print(f"  Campaign created:   {campaign_name}")
+    print(f"  Pushed to Instantly:{pushed}")
+    print(f"  Status:             {status_text}")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+
+def cmd_load(csv_path: str):
+    """Load CSV/Excel and run full pipeline — verify, score, write, send."""
+    load_and_launch(csv_path)
 
 
 def cmd_verify():
