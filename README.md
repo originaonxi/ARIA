@@ -201,15 +201,24 @@ Average founder: 50 manual emails → 3 replies → 1 meeting → gives up.
 
 ## PKM — Persuasion Knowledge Model Layer
 
-Added March 24, 2026.
+Added March 24, 2026. Shared perception layer with [AROS](https://github.com/originaonxi/aros-agent).
 
-Every investor email now runs through defense profiling before writing.
+**[PKM Analyzer](https://github.com/originaonxi/pkm-analyzer)** — the standalone tool and API. [Try it live](https://originaonxi.github.io/pkm-analyzer/) (free, no key needed).
 
-An ex-Gong VP who angel invests gets MOTIVE_INFERENCE profile, PURE_DATA bypass, and a 100-word hard cap.
+Every investor email now runs through defense profiling before writing. PKM classifies each investor's digital profile into one of **10 defense modes**, then generates messages calibrated to bypass their specific resistance pattern.
 
-A busy SMB operator gets OVERLOAD_AVOIDANCE, 60-word hard cap, specific calendar slot, no "hope this finds you" ever.
+| Investor type | Defense mode | Bypass | What changes |
+|--------------|-------------|--------|-------------|
+| Ex-Gong VP, angel investor | MOTIVE_INFERENCE | PURE_DATA | Opens with a number, never "I'm excited to" |
+| Busy SMB operator | OVERLOAD_AVOIDANCE | ULTRA_SHORT | 60-word hard cap, specific calendar slot |
+| Technical CTO | SOCIAL_PROOF_SKEPTICISM | CREDIBILITY_FIRST | Verifiable numbers only, no "trusted by" |
+| Bootstrapped founder | IDENTITY_THREAT | AMPLIFICATION | "Your judgment runs this" — never "let us fix" |
 
-Same traction. Completely different message. Calibrated to bypass the exact defense this specific person has up.
+Same traction ($199K collected, $2.9M ARR velocity). Completely different message. Calibrated to bypass the exact defense this specific person has up.
+
+All defense profiles are cached in Airtable — shared across AROS and ARIA. A prospect analyzed by AROS is instantly available to ARIA and vice versa. One profile, analyzed once, used everywhere.
+
+Based on [Friestad & Wright (1994)](https://doi.org/10.1086/209380) — 30 years of persuasion psychology.
 
 ---
 
