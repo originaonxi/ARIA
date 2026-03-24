@@ -178,4 +178,4 @@ python aria.py run
 
 ---
 
-**Built by [Anmol Sam](https://github.com/originaonxi)** — origin@aonxi.com / [aonxi.app](https://aonxi.app)
+**Built by [Anmol Sam](https://github.com/originaonxi)** — origin@aonxi.com / [originaonxi.github.io](https://originaonxi.github.io) / [aonxi.app](https://aonxi.app)
