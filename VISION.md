@@ -139,23 +139,27 @@ your business should be in the answer.
 
 ## The offer
 
+**3 months to discover. 9 months to scale. You pay from closed revenue only.**
+
 ```
-Price:      $999/month
-Guarantee:  Positive ROI within 90 days
-Fallback:   We work for free until you hit it
+               Discovery (Mo 1-3)    Scaling (Mo 4-12)
+Starter        $3K/month             8-12% revenue share    1 RMC     $30K+ capital
+Growth         $5K/month             8-15% revenue share    2 RMCs    $50K+ capital
+Scale          $10K/month            8-25% revenue share    5 RMCs    $100K+ capital
 ```
 
 What you get:
-- AROS running autonomously to find new customers
-- ARIA running autonomously to find capital if needed
-- PKM-calibrated outreach to every single prospect
-- LLM content layer building your AI search presence
+- AROS finding signal-driven prospects and qualified meetings every morning
+- PKM profiling every prospect's defense mode before outreach
+- AI sales intelligence from 100% of your calls
+- Revenue-Making Campaigns validated with 90-day performance data
+- We fund 100% of ad spend after validation
 - Full Airtable dashboard — every action, outcome, pattern
-- Learning that compounds every month you stay
+- Self-improving system that compounds every month
 
-What Fortune 500 pays $2M/year for.
-What you get for $999/month.
-The ROI closes itself.
+You only meet people already showing buying signals.
+We fund the scaling. You pay from closed deals.
+If we don't close, you don't pay.
 
 ## Why the guarantee works
 
