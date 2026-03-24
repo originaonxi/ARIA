@@ -12,6 +12,28 @@ Built by [Aonxi](https://aonxi.com) to raise $250K pre-seed.
 
 ---
 
+## Velocity Numbers — March 2026
+
+AROS (the product ARIA is raising money for):
+```
+$199K    gross volume collected
+$8,000   peak single day
+$2.9M    ARR velocity (that day annualized)
+$0.50    cost per day
+```
+
+ARIA (this repo):
+```
+Emails sent to:  General Catalyst, Bessemer, Antler, Blume VC, Kae Capital + 14 more
+Meetings booked: yes — calendar proof exists
+Raising:         $250K pre-seed
+PKM layer:       live as of March 24, 2026
+```
+
+The product pitches itself by running on us first.
+
+---
+
 ## What ARIA Does in One Command
 
 ```bash
@@ -177,6 +199,20 @@ Average founder: 50 manual emails → 3 replies → 1 meeting → gives up.
 
 ---
 
+## PKM — Persuasion Knowledge Model Layer
+
+Added March 24, 2026.
+
+Every investor email now runs through defense profiling before writing.
+
+An ex-Gong VP who angel invests gets MOTIVE_INFERENCE profile, PURE_DATA bypass, and a 100-word hard cap.
+
+A busy SMB operator gets OVERLOAD_AVOIDANCE, 60-word hard cap, specific calendar slot, no "hope this finds you" ever.
+
+Same traction. Completely different message. Calibrated to bypass the exact defense this specific person has up.
+
+---
+
 ## Quick Start
 
 ```bash
@@ -271,24 +307,25 @@ config.py               Loads secrets from .env only
 
 ```
 AONXI (the company):
-  $650,458 ARR
-  5 months from zero
+  $199K gross volume collected
+  $8,000 peak single day (March 2026)
+  $2.9M ARR velocity (that day annualized)
   $0 raised
-  40 customers
-  $147,626 collected
+  Oct 2025 — Mar 2026
   Zero sales reps — fully autonomous
 
 AROS (the product ARIA is raising for):
   $0.50/day vs Gong $100,000/year
-  Built in 1 day
   3,016 prospects scored
   $455K pipeline
+  PKM defense profiling live
   Code: github.com/originaonxi/aros-agent
 
 ARIA (this repo):
   19 investor emails sent on first deploy
   4 bounces caught before sending (saved domain reputation)
   Raising: $250K pre-seed
+  PKM layer live as of March 24, 2026
 ```
 
 ---
