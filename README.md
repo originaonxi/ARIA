@@ -1,239 +1,141 @@
 # ARIA — Autonomous Relationship Intelligence Agent
 
-> An AI agent that runs your entire fundraise. Find investors, research them, write personalized emails, verify deliverability, send at scale, classify replies, book meetings. One command. Zero manual work.
+> One of two permanent intelligence cores at Aonxi.
+> ARIA finds capital. AROS finds revenue.
+> Both learn from the same brain. Both compound forever.
 
-**First deploy: 19 investor emails sent to General Catalyst, Bessemer, Antler, Blume VC, Kae Capital, Array Ventures, and 13 more. All personalized. All verified. All autonomous.**
+[![Status](https://img.shields.io/badge/Status-Production-green?style=for-the-badge)]()
+[![PKM](https://img.shields.io/badge/PKM-10_Defense_Modes-purple?style=for-the-badge)](https://github.com/originaonxi/pkm-analyzer)
+[![Brain](https://img.shields.io/badge/Brain-Airtable-blue?style=for-the-badge)]()
+[![Raising](https://img.shields.io/badge/Raising-$250K_pre--seed-orange?style=for-the-badge)]()
 
-```
-$650,458 ARR · 5 months · $0 raised · 40 customers · zero sales reps
-```
-
-Built by [Aonxi](https://aonxi.com) to raise $250K pre-seed.
-
----
-
-## Velocity Numbers — March 2026
-
-AROS (the product ARIA is raising money for):
-```
-$199K    gross volume collected
-$8,000   peak single day
-$2.9M    ARR velocity (that day annualized)
-$0.50    cost per day
-```
-
-ARIA (this repo):
-```
-Emails sent to:  General Catalyst, Bessemer, Antler, Blume VC, Kae Capital + 14 more
-Meetings booked: yes — calendar proof exists
-Raising:         $250K pre-seed
-PKM layer:       live as of March 24, 2026
-```
-
-The product pitches itself by running on us first.
+**[Read the full Aonxi vision](./VISION.md)**
 
 ---
 
-## What ARIA Does in One Command
+## What ARIA does
 
-```bash
-python aria.py run
+ARIA finds investors, scores them by thesis fit,
+verifies every email, profiles their psychological
+defense mode, writes a message calibrated to bypass
+that defense, creates the campaign, and sends it.
+
+Autonomously. The same system that finds revenue now finds capital.
+
+**First deployment — March 2026:**
+
+```
+Investors contacted:  General Catalyst, Bessemer, Antler,
+                      Blume VC, Kae Capital + 14 more
+Emails sent:          19
+Bounces caught:       4 (before sending — domain reputation protected)
+Raising:              $250K pre-seed
+Product:              $199K collected, $0 raised, 40 customers
 ```
 
-```
-[1/7] FINDING INVESTORS (Apollo)...
-  Found: 150 | Added: 142 | Dups: 8
-
-[2/7] VERIFYING EMAILS (Millionverifier)...
-  Valid: 119 | Invalid: 23 | Saved your domain from 23 bounces
-
-[3/7] SCORING INVESTORS...
-  Tier 1 (Operator Angels):  12   ← ex-Gong, ex-HubSpot, ex-Salesforce
-  Tier 2 (SMB Operators):     8   ← know the pain personally
-  Tier 3 (VC/AI Investors):  94   ← thesis match
-  Skipped:                   28   ← recruiters, designers, no fit
-
-[4/7] RESEARCHING TOP INVESTORS (SerpAPI)...
-  HIGH confidence:  4   ← found their blog posts, tweets, talks
-  MEDIUM confidence: 6  ← found portfolio companies
-  LOW confidence:    2  ← thesis match only
-
-[5/7] WRITING EMAILS (Claude)...
-  Written: 25 personalized cold emails
-  Each under 100 words. Michael Seibel 3-sentence structure.
-
-[6/7] SENDING TO INSTANTLY...
-  ✓ Sarah Chen        → sarah@chenventures.com    (Tier 1, HOT)
-  ✓ Marcus Williams   → marcus@homewell.com       (Tier 2, WARM)
-  ✓ Priya Kumar       → priya@aiseedfund.vc       (Tier 3, COLD)
-  ... 22 more
-  Total sent: 25/25
-
-[7/7] LINKEDIN PREP...
-  HeyReach CSV: data/heyreach_2026-03-23.csv (25 investors)
-```
-
-**That's it.** 25 personalized investor emails, researched, verified, and sent. Every day. Automatically.
+The product being used to raise money is being used to raise the money.
+Every investor who receives an ARIA email is watching it work before they reply.
 
 ---
 
-## The Email ARIA Writes
+## Why VCs are the hardest defense mode to bypass
 
-ARIA doesn't send templates. Every email is unique. Here's a real one:
+VCs are **MOTIVE_INFERENCE** — awareness score 9/10.
 
-> **Subject:** $650K ARR, 5 months, $0 raised
->
-> Sarah — we built an autonomous revenue agent that hit $650K ARR in 5 months with zero funding. Given your time at Gong, you've seen exactly what enterprise GTM costs. We replaced it for $0.50/day. 20 minutes, no deck.
->
-> Anmol
-> origin@aonxi.com
-> calendar.app.google/gZ6V9ry93SQizZye8
+They spend their careers evaluating pitches. They have read 10,000 cold emails. They decoded your intent before you finished the subject line.
 
-3 sentences. Under 100 words. Traction first. Why them specifically. The ask. Done.
+Most founder emails look like this:
 
----
+> Hi Sarah — I'm really excited to share what we're building at Aonxi. I think there's a great opportunity here and would love to connect for a quick call.
 
-## The 5 Generations
+Every word triggers a defense. *Excited* — detected. *Great opportunity* — detected. *Quick call* — detected. Email deleted before the second paragraph.
 
-Each generation makes the next smarter. By Gen 5, zero human input needed.
+**ARIA sends emails that look like this:**
 
-```
-GEN 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ NOW (live, sending emails)
-│
-│  Find → Score → Verify → Research → Write → Send → Track
-│  SQLite dedup: no investor contacted twice. Ever.
-│  19 emails sent. General Catalyst, Bessemer, Antler, Blume, Kae.
-│
-GEN 2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ THE LEARNER (Week 4)
-│
-│  System watches what works. Adjusts.
-│  A/B tests every subject line. Tracks opens, replies, meetings.
-│  Scoring weights auto-update from real reply data.
-│  Week 1: 5% reply rate → Week 8: 12% reply rate.
-│
-GEN 3 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ THE RESEARCHER (Week 8)
-│
-│  Monitors investor Twitter, LinkedIn, blogs in real time.
-│  Investor tweets about AI agents → ARIA emails them in 2 hours.
-│  Conference detection. Portfolio tracking. News-aware hooks.
-│  Every email feels like a human spent 20 minutes researching.
-│
-GEN 4 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ THE NEGOTIATOR (Week 12)
-│
-│  Handles objections autonomously. Maps warm intro paths.
-│  Generates meeting prep briefs. Tracks competing funds.
-│  When investor A says "talk to B" → ARIA researches B,
-│  writes warm email mentioning A, queues it. Automatically.
-│
-GEN 5 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ AUTONOMOUS (Week 16)
-│
-│  Zero human input. Self-sourcing. Self-qualifying.
-│  Self-optimizing. Multi-round capable (Seed → A → B).
-│  Founder gets one briefing: "3 meetings today. 2 term sheets."
-│  The founder's only job: show up and close.
-```
+> $199K collected. $8K peak day. $0.50/day to run. Zero sales reps. Code is public. You backed [company] — autonomous GTM at the SMB layer. This is that, built and verified. 20 minutes. No deck.
+
+No "I". No pitch language. No excitement. Data, a specific signal, a specific ask.
+
+That is **PURE_DATA bypass** for **MOTIVE_INFERENCE defense**.
 
 ---
 
-## Why This Exists
+## The PKM layer in investor outreach
 
-Most founders raise money like this:
-1. Write a pitch deck
-2. Send it to 50 investors they found on LinkedIn
-3. Wait 6-12 months
-4. Get 3 replies, 1 meeting, 0 checks
-5. Give up or try again
+Same 10 defense modes. Different population distribution.
+[PKM Analyzer](https://github.com/originaonxi/pkm-analyzer) — [try it live](https://originaonxi.github.io/pkm-analyzer/) (free, no key needed).
 
-ARIA does this:
-1. **Find** 5,000 investors automatically (Apollo API)
-2. **Score** each one — ex-Gong VP who angel invests = 10/10, random LinkedIn connection = 2/10, skip
-3. **Verify** every email (Millionverifier) — bouncing an investor email is fatal
-4. **Research** each one (SerpAPI) — find what they actually said last month, not their job title
-5. **Write** a 3-sentence email (Claude) — traction, why them, the ask
-6. **Send** at 9am in their timezone (Instantly) — stop on reply, never send twice
-7. **Track** every reply (Claude classification) — INTERESTED, OBJECTION, NOT_NOW, REFERRAL
-8. **Learn** what worked — update scoring, writing, timing every week
+| Investor type | Defense mode | Bypass | What changes |
+|--------------|-------------|--------|-------------|
+| VC partner (ex-GTM) | MOTIVE_INFERENCE | PURE_DATA | Opens with a number, never "I'm excited to" |
+| Operator angel | TACTIC_RECOGNITION | SIGNAL_HOOK | References their specific portfolio company |
+| Technical investor | SOCIAL_PROOF_SKEPTICISM | CREDIBILITY_FIRST | Verifiable numbers only, no "trusted by" |
+| First-time angel | AUTHORITY_DEFERENCE | PEER_PROOF | Names other angels who committed |
+| Busy SMB operator | OVERLOAD_AVOIDANCE | ULTRA_SHORT | 60-word hard cap, specific calendar slot |
 
-The math:
-```
-25 emails/day × 90 days           = 2,250 touches
-8% reply rate (personalized)      = 180 replies
-25% meeting rate                  = 45 meetings
-You need 3-5 yeses for $250K      = Done in 90 days
-```
+ARIA detects which one. ARIA writes for that one. Every time.
 
-Average founder: 50 manual emails → 3 replies → 1 meeting → gives up.
+All defense profiles are cached in Airtable — shared across ARIA and AROS. A prospect analyzed by one agent is instantly available to the other.
+
+Based on [Friestad & Wright (1994)](https://doi.org/10.1086/209380) — 30 years of persuasion psychology.
+
+---
+
+## The brain — Airtable
+
+Every investor ARIA contacts is recorded.
+
+- Which thesis keywords converted
+- Which defense mode each investor was running
+- Which bypass strategy got the reply
+- Which time of day a specific fund partner opens emails
+- Which portfolio signal triggered the conversation
+
+This pattern library compounds every raise. The next founder who uses ARIA gets the benefit of every raise that came before them.
 
 ---
 
 ## Architecture
 
 ```
-                         ┌──────────────────┐
-                         │    aria.py CLI    │
-                         │  One command to   │
-                         │  run everything   │
-                         └────────┬─────────┘
-                                  │
-         ┌────────────────────────┼────────────────────────┐
-         │                        │                        │
-    ┌────▼────┐            ┌──────▼──────┐          ┌──────▼──────┐
-    │  FIND   │            │  QUALIFY    │          │  EXECUTE    │
-    │         │            │            │          │             │
-    │ Apollo  │            │ Scorer     │          │ Writer      │
-    │ Hunter  │            │ Researcher │          │ (Claude)    │
-    │ CSV     │            │ Verifier   │          │ Instantly   │
-    └────┬────┘            └──────┬──────┘          │ Airtable   │
-         │                        │                │ LinkedIn   │
-         │                        │                └──────┬──────┘
-         │                        │                       │
-         └────────────────────────┼───────────────────────┘
-                                  │
-                         ┌────────▼─────────┐
-                         │   SQLite (dedup)  │
-                         │                   │
-                         │ No investor ever  │
-                         │ contacted twice.  │
-                         └───────────────────┘
+aria.py               CLI entry — 13 commands, one pipeline
+aria_db.py            SQLite dedup engine (source of truth)
+apollo_client.py      Investor finding + enrichment
+millionverifier.py    Email verification before send
+investor_scorer.py    Thesis fit scoring (Tier 1/2/3)
+investor_researcher.py SerpAPI research
+investor_writer.py    Claude Haiku email generation (PKM applied)
+instantly_client.py   Campaign creation + send + tracking
+airtable_sync.py      Visual CRM dashboard sync
+linkedin_prep.py      HeyReach CSV for LinkedIn outreach
+reply_processor.py    Claude reply classification + HOT alerts
+briefing.py           Daily 7am pipeline email
 ```
 
----
-
-## PKM — Persuasion Knowledge Model Layer
-
-Added March 24, 2026. Shared perception layer with [AROS](https://github.com/originaonxi/aros-agent).
-
-**[PKM Analyzer](https://github.com/originaonxi/pkm-analyzer)** — the standalone tool and API. [Try it live](https://originaonxi.github.io/pkm-analyzer/) (free, no key needed).
-
-Every investor email now runs through defense profiling before writing. PKM classifies each investor's digital profile into one of **10 defense modes**, then generates messages calibrated to bypass their specific resistance pattern.
-
-| Investor type | Defense mode | Bypass | What changes |
-|--------------|-------------|--------|-------------|
-| Ex-Gong VP, angel investor | MOTIVE_INFERENCE | PURE_DATA | Opens with a number, never "I'm excited to" |
-| Busy SMB operator | OVERLOAD_AVOIDANCE | ULTRA_SHORT | 60-word hard cap, specific calendar slot |
-| Technical CTO | SOCIAL_PROOF_SKEPTICISM | CREDIBILITY_FIRST | Verifiable numbers only, no "trusted by" |
-| Bootstrapped founder | IDENTITY_THREAT | AMPLIFICATION | "Your judgment runs this" — never "let us fix" |
-
-Same traction ($199K collected, $2.9M ARR velocity). Completely different message. Calibrated to bypass the exact defense this specific person has up.
-
-All defense profiles are cached in Airtable — shared across AROS and ARIA. A prospect analyzed by AROS is instantly available to ARIA and vice versa. One profile, analyzed once, used everywhere.
-
-Based on [Friestad & Wright (1994)](https://doi.org/10.1086/209380) — 30 years of persuasion psychology.
-
----
-
-## Quick Start
-
+**One command:**
 ```bash
-git clone https://github.com/originaonxi/ARIA.git
-cd ARIA
-pip install -r requirements.txt
-cp .env.example .env
-# Add your API keys to .env
 python aria.py run
 ```
 
-## All Commands
+Find → Score → Verify → Research → Profile → Write → Send → Track → Learn.
+
+**Stack:** Claude Haiku / Apollo / Millionverifier / SerpAPI / Instantly / Airtable / SQLite
+
+---
+
+## The 5-generation roadmap
+
+| Gen | Name | Status | What it adds |
+|-----|------|--------|-------------|
+| 1 | Pipeline | **LIVE** | Find → Score → Verify → Research → Profile → Write → Send |
+| 2 | Learner | Week 4 | A/B testing, auto-adjust scoring from reply data |
+| 3 | Researcher | Week 8 | Real-time portfolio moves, trigger-based outreach |
+| 4 | Negotiator | Week 12 | Objection handling, warm intro path mapping |
+| 5 | Autonomous | Week 16 | Zero human input, self-sourcing, self-qualifying |
+
+---
+
+## All commands
 
 | Command | What it does |
 |---------|-------------|
@@ -248,103 +150,32 @@ python aria.py run
 | `aria verify` | Run Millionverifier on unverified emails |
 | `aria score` | Score all unscored investors |
 | `aria research N` | Research top N investors via SerpAPI |
-| `aria write N` | Write emails for top N with Claude |
-| `aria send` | Push batch to Instantly |
-| `aria send --dry-run` | Preview what would be sent |
-| `aria stats` | Reply rates by tier, projections, analytics |
+| `aria write` | Write emails for top scored investors |
+| `aria sync` | Sync to Airtable CRM dashboard |
 
 ---
 
-## Stack
+## Run locally
 
-| Tool | What | Cost |
-|------|------|------|
-| Claude Haiku | Writes every email | ~$0.02/email |
-| SerpAPI | Researches each investor | ~$0.01/search |
-| Millionverifier | Verifies deliverability | ~$0.001/email |
-| Instantly | Sends, warms, rotates, tracks | ~$30/mo |
-| Apollo | Finds investors automatically | Free tier works |
-| Hunter | Email enrichment fallback | Free tier works |
-| Airtable | Visual CRM dashboard | Free tier works |
-| SQLite | Dedup + source of truth | Free forever |
-
-**Total cost to run ARIA: ~$2/day.** Compare to a fundraising advisor at $5,000/month.
-
----
-
-## The Dedup Engine
-
-This is the most important piece. Every investor who has ever been contacted lives in SQLite forever. Import a new Apollo list next month with the same names? ARIA skips them automatically.
-
-```python
-def is_safe_to_contact(investor_id) -> tuple:
-    # Returns (False, reason) if ANY of:
-    # - status not in NEW/QUEUED/VERIFIED
-    # - email_count >= 3
-    # - email_valid = 0 (bounced)
-    # - replied = 1 (already replied)
-    # - meeting_booked = 1
-    # - last_contacted within 5 days
-    # Returns (True, "safe") otherwise
-```
-
-Most founders accidentally email the same investor 4 times across different tools and lists. ARIA makes that impossible.
-
----
-
-## Files
-
-```
-aria.py                 Main CLI — 13 commands, full pipeline
-aria_db.py              SQLite dedup engine — source of truth
-apollo_client.py        Apollo API — find + enrich investors
-millionverifier.py      Email verification before any send
-investor_scorer.py      Score by thesis fit (Tier 1/2/3)
-investor_researcher.py  SerpAPI — find what investors said
-investor_writer.py      Claude writes 3-sentence emails
-instantly_client.py     Instantly API — send + warm + track
-airtable_sync.py        Visual CRM on top of SQLite
-linkedin_prep.py        HeyReach CSV for LinkedIn outreach
-reply_processor.py      Claude classifies replies + HOT alerts
-briefing.py             Daily 7am pipeline email
-config.py               Loads secrets from .env only
+```bash
+git clone https://github.com/originaonxi/ARIA
+cd ARIA
+pip install -r requirements.txt
+cp .env.example .env
+# Add your keys to .env
+python aria.py run
 ```
 
 ---
 
-## Real Numbers
+## Related
 
-```
-AONXI (the company):
-  $199K gross volume collected
-  $8,000 peak single day (March 2026)
-  $2.9M ARR velocity (that day annualized)
-  $0 raised
-  Oct 2025 — Mar 2026
-  Zero sales reps — fully autonomous
-
-AROS (the product ARIA is raising for):
-  $0.50/day vs Gong $100,000/year
-  3,016 prospects scored
-  $455K pipeline
-  PKM defense profiling live
-  Code: github.com/originaonxi/aros-agent
-
-ARIA (this repo):
-  19 investor emails sent on first deploy
-  4 bounces caught before sending (saved domain reputation)
-  Raising: $250K pre-seed
-  PKM layer live as of March 24, 2026
-```
+| Repo | What it does |
+|------|-------------|
+| [AROS](https://github.com/originaonxi/aros-agent) | Finds revenue — the other intelligence core |
+| [PKM Analyzer](https://github.com/originaonxi/pkm-analyzer) | Defense profiling — [try it live](https://originaonxi.github.io/pkm-analyzer/) |
+| [VISION.md](./VISION.md) | The full Aonxi vision — AGI revenue layer for 400M businesses |
 
 ---
 
-## Contact
-
-**Anmol Sam** — CTO, Aonxi
-
-origin@aonxi.com · [Book 20 minutes](https://calendar.app.google/gZ6V9ry93SQizZye8) · [AROS source code](https://github.com/originaonxi/aros-agent)
-
----
-
-*ARIA raises the money. AROS makes the money. Together they are Aonxi — fully autonomous revenue infrastructure for the 400M businesses that can't afford enterprise GTM.*
+**Built by [Anmol Sam](https://github.com/originaonxi)** — origin@aonxi.com / [aonxi.app](https://aonxi.app)
