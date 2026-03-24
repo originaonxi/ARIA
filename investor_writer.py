@@ -65,6 +65,129 @@ RULES:
 AONXI: $650K ARR, 5 months, $0 raised, 40 customers, fully autonomous."""
 
 
+# ── Defense Profiling ─────────────────────────────────────────────
+
+GTM_COMPANIES = {
+    "gong", "outreach", "salesloft", "hubspot", "salesforce", "apollo",
+    "zoominfo", "chorus", "clari", "drift", "intercom", "sendoso",
+    "6sense", "bombora", "demandbase", "seismic", "highspot", "clearbit",
+}
+
+DEFENSE_PROFILES = {
+    "MOTIVE_INFERENCE": {
+        "title_signals": {"partner", "vp", "director", "founder", "managing", "general partner", "gp"},
+        "bypass_strategy": "PURE_DATA",
+        "forbidden_phrases": [
+            "excited", "reach out", "love to", "synergy", "opportunity",
+            "quick call", "touching base", "circle back", "on your radar",
+        ],
+    },
+    "TACTIC_RECOGNITION": {
+        "title_signals": {"founder", "co-founder", "serial entrepreneur", "repeat founder"},
+        "bypass_strategy": "SIGNAL_HOOK",
+        "forbidden_phrases": [
+            "I noticed you", "I came across", "relevant to your work",
+            "fellow founder", "as a fellow", "I saw that you",
+            "your impressive", "your amazing",
+        ],
+    },
+    "OVERLOAD_AVOIDANCE": {
+        "title_signals": {"ceo", "owner", "operator", "president", "managing director"},
+        "bypass_strategy": "PURE_DATA",
+        "forbidden_phrases": [
+            "just wanted to", "hope this finds you", "I know you're busy",
+            "when you get a chance", "at your convenience", "quick question",
+        ],
+    },
+    "SOCIAL_PROOF_SKEPTICISM": {
+        "title_signals": {"cto", "engineer", "vp engineering", "technical", "data", "architect"},
+        "bypass_strategy": "CREDIBILITY_FIRST",
+        "forbidden_phrases": [
+            "industry-leading", "best-in-class", "proven", "trusted by",
+            "world-class", "top-tier", "leading provider", "market leader",
+        ],
+    },
+}
+
+BYPASS_INSTRUCTIONS = {
+    "PURE_DATA": "Open with a concrete number. Never open with 'I'. Lead with verifiable data. No persuasion language — let the numbers do the work.",
+    "SIGNAL_HOOK": "Open by referencing something specific from the last 7 days — their post, their hire, their funding news. Prove you did real research, not a template merge.",
+    "CREDIBILITY_FIRST": "Open with exact numbers and a public-verifiable proof point (GitHub link, public metric). No round numbers. No unverifiable claims.",
+}
+
+
+def _estimate_cold_email_volume(investor: dict) -> int:
+    """Estimate how many cold emails this person gets per week."""
+    title = (investor.get("investor_type") or investor.get("title") or "").lower()
+    tier = investor.get("tier", 3)
+    if tier == 1 or "partner" in title or "managing" in title:
+        return 200
+    elif tier == 2 or "founder" in title:
+        return 100
+    return 50
+
+
+def _detect_defense_mode(investor: dict) -> str:
+    """Detect primary defense mode from investor profile."""
+    title = (investor.get("investor_type") or investor.get("title") or "").lower()
+    company = (investor.get("company") or "").lower()
+
+    # Check GTM/sales background → MOTIVE_INFERENCE
+    if company in GTM_COMPANIES:
+        return "MOTIVE_INFERENCE"
+
+    # Check title signals in priority order
+    for mode in ["SOCIAL_PROOF_SKEPTICISM", "MOTIVE_INFERENCE", "TACTIC_RECOGNITION", "OVERLOAD_AVOIDANCE"]:
+        profile = DEFENSE_PROFILES[mode]
+        for signal in profile["title_signals"]:
+            if signal in title:
+                return mode
+
+    # Fallback: VCs and investors default to MOTIVE_INFERENCE
+    if any(kw in title for kw in ("investor", "angel", "vc", "venture", "capital")):
+        return "MOTIVE_INFERENCE"
+
+    return "MOTIVE_INFERENCE"
+
+
+def profile_defenses(target: dict) -> dict:
+    """
+    Profile a target's psychological defenses against cold outreach.
+    Returns awareness_score, defense_mode, bypass_strategy, forbidden_phrases.
+    """
+    title = (target.get("investor_type") or target.get("title") or "").lower()
+    company = (target.get("company") or "").lower()
+    tier = target.get("tier", 3)
+
+    # Awareness score: 0-10
+    score = 3  # baseline
+    if tier == 1:
+        score += 3
+    elif tier == 2:
+        score += 1
+    if company in GTM_COMPANIES:
+        score += 3
+    if any(kw in title for kw in ("partner", "vp", "director", "managing")):
+        score += 2
+    if any(kw in title for kw in ("founder", "ceo", "cto")):
+        score += 1
+    estimated_volume = _estimate_cold_email_volume(target)
+    if estimated_volume >= 200:
+        score += 1
+    score = min(score, 10)
+
+    defense_mode = _detect_defense_mode(target)
+    profile = DEFENSE_PROFILES[defense_mode]
+
+    return {
+        "awareness_score": score,
+        "defense_mode": defense_mode,
+        "bypass_strategy": profile["bypass_strategy"],
+        "forbidden_phrases": profile["forbidden_phrases"],
+        "estimated_weekly_cold_emails": estimated_volume,
+    }
+
+
 def _parse_json(raw: str) -> dict:
     """Parse JSON from Claude response, handling code fences."""
     text = raw.strip()
@@ -75,11 +198,12 @@ def _parse_json(raw: str) -> dict:
     return json.loads(text)
 
 
-def write_cold_email(investor: dict) -> dict:
+def write_cold_email(investor: dict, use_defense_profiling: bool = True) -> dict:
     """
     Write a cold email for an investor.
     Uses best hook available based on research confidence.
-    Returns: {subject_a, subject_b, body}
+    When use_defense_profiling=True, applies defense-aware bypass strategy.
+    Returns: {subject_a, subject_b, body, predicted_reply_tier, defense_profile}
     """
     first = investor.get("first_name", "")
     last = investor.get("last_name", "")
@@ -97,6 +221,20 @@ def write_cold_email(investor: dict) -> dict:
         hook = research_hook
     else:
         hook = pers_hook
+
+    # Defense profiling
+    defense = profile_defenses(investor) if use_defense_profiling else None
+
+    # Build system prompt with defense layer
+    system = SYSTEM_PROMPT
+    if defense:
+        banned = ", ".join(f'"{p}"' for p in defense["forbidden_phrases"])
+        bypass_instruction = BYPASS_INSTRUCTIONS[defense["bypass_strategy"]]
+        system += f"""
+
+DEFENSE PROFILE (awareness: {defense['awareness_score']}/10, mode: {defense['defense_mode']}):
+BANNED WORDS — never use any of these phrases: {banned}
+WRITING STRATEGY: {bypass_instruction}"""
 
     user_prompt = f"""Write a cold email to this angel investor:
 
@@ -117,7 +255,7 @@ Subject B should be personal (e.g. "{first} — autonomous agent, Gong for $0.50
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=512,
-        system=SYSTEM_PROMPT,
+        system=system,
         messages=[{"role": "user", "content": user_prompt}],
     )
 
@@ -138,6 +276,7 @@ Subject B should be personal (e.g. "{first} — autonomous agent, Gong for $0.50
         "subject_b": data.get("subject_b", ""),
         "body": data.get("body", ""),
         "predicted_reply_tier": reply_tier,
+        "defense_profile": defense,
     }
 
 
@@ -231,19 +370,40 @@ if __name__ == "__main__":
     ]
 
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    print("WRITER TEST — 3 INVESTOR PROFILES")
+    print("DEFENSE PROFILING TEST — 3 INVESTORS")
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     for inv in test_investors:
         name = f"{inv['first_name']} {inv['last_name']}"
-        print(f"\n  {name} | Tier {inv['tier']} | {inv['research_confidence']}")
+        print(f"\n{'='*50}")
+        print(f"  {name} | Tier {inv['tier']} | {inv['research_confidence']}")
+        print(f"{'='*50}")
 
-        # Cold email
-        email = write_cold_email(inv)
-        print(f"\n  SUBJECT A: {email['subject_a']}")
-        print(f"  SUBJECT B: {email['subject_b']}")
-        print(f"  REPLY TIER: {email['predicted_reply_tier']}")
+        # Defense profile
+        defense = profile_defenses(inv)
+        print(f"\n  DEFENSE PROFILE:")
+        print(f"    Awareness Score:  {defense['awareness_score']}/10")
+        print(f"    Defense Mode:     {defense['defense_mode']}")
+        print(f"    Bypass Strategy:  {defense['bypass_strategy']}")
+        print(f"    Est. Weekly Spam: ~{defense['estimated_weekly_cold_emails']} emails")
+        print(f"    Forbidden:        {defense['forbidden_phrases']}")
+
+        # Email WITHOUT defense profiling
+        print(f"\n  ── EMAIL WITHOUT DEFENSE PROFILING ──")
+        email_naive = write_cold_email(inv, use_defense_profiling=False)
+        print(f"  SUBJECT A: {email_naive['subject_a']}")
+        print(f"  SUBJECT B: {email_naive['subject_b']}")
         print(f"  ─────────────────────────────────")
-        for line in email["body"].split("\n"):
+        for line in email_naive["body"].split("\n"):
+            print(f"  {line}")
+
+        # Email WITH defense profiling
+        print(f"\n  ── EMAIL WITH DEFENSE PROFILING ──")
+        email_defense = write_cold_email(inv, use_defense_profiling=True)
+        print(f"  SUBJECT A: {email_defense['subject_a']}")
+        print(f"  SUBJECT B: {email_defense['subject_b']}")
+        print(f"  REPLY TIER: {email_defense['predicted_reply_tier']}")
+        print(f"  ─────────────────────────────────")
+        for line in email_defense["body"].split("\n"):
             print(f"  {line}")
         print(f"  ─────────────────────────────────")
 
