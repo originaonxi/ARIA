@@ -1,3 +1,6 @@
 [submodule "router"]
 	path = router
 	url = https://github.com/originaonxi/aonxi-router
+[submodule "memcollab"]
+	path = memcollab
+	url = https://github.com/originaonxi/aonxi-memcollab.git
