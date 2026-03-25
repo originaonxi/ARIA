@@ -31,11 +31,19 @@ from investor_writer import write_cold_email, write_linkedin_message, write_foll
 from millionverifier import verify_batch
 from instantly_client import get_or_create_campaign, add_lead, get_campaign_stats
 from airtable_sync import sync_investor
-from apollo_client import daily_prospect_harvest
+from hunter_client import daily_prospect_harvest
 from linkedin_prep import prep_heyreach_csv
 from reply_processor import process_replies
 from briefing import send_daily_briefing
 from config import DATA_DIR, INSTANTLY_CAMPAIGN_ID
+
+# MemCollab — cross-agent shared memory
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "memcollab"))
+try:
+    from memcollab import record as mc_record, Trajectory, Outcome
+    MEMCOLLAB_AVAILABLE = True
+except ImportError:
+    MEMCOLLAB_AVAILABLE = False
 
 
 def cmd_run(auto: bool = False, per_query: int = 50, send_limit: int = 25):
@@ -44,8 +52,8 @@ def cmd_run(auto: bool = False, per_query: int = 50, send_limit: int = 25):
     print("ARIA RUN — Full Pipeline")
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-    # Step 1: Apollo harvest
-    print("\n[1/7] FINDING INVESTORS (Apollo)...")
+    # Step 1: Hunter harvest
+    print("\n[1/7] FINDING INVESTORS (Hunter)...")
     harvest_stats = daily_prospect_harvest(per_query=per_query)
     print(f"  Found: {harvest_stats['found']} | Added: {harvest_stats['added']} | Dups: {harvest_stats['duplicates']}")
 
@@ -711,6 +719,29 @@ def cmd_send(dry_run: bool = False):
                 db.update_investor(inv["id"], {"airtable_id": airtable_id})
             sent += 1
             print(f"  ✓ {inv['email']}")
+
+            # MemCollab: log trajectory for cross-agent learning
+            if MEMCOLLAB_AVAILABLE:
+                try:
+                    defense = inv.get("defense_profile") or {}
+                    traj = Trajectory(
+                        agent="ARIA",
+                        model_used="claude-haiku-4-5-20251001",
+                        profile_text=f"{inv.get('first_name','')} {inv.get('last_name','')} {inv.get('company','')}",
+                        defense_mode=defense.get("defense_mode", "MOTIVE_INFERENCE"),
+                        pkm_confidence=defense.get("awareness_score", 5) / 10.0,
+                        awareness_score=defense.get("awareness_score", 5),
+                        bypass_strategy=defense.get("bypass_strategy", "PURE_DATA"),
+                        channel="email",
+                        message_text=inv.get("email_body", ""),
+                        message_word_count=len(inv.get("email_body", "").split()),
+                        outcome=Outcome.NO_REPLY,
+                        vertical="vc",
+                        icp_tier=str(inv.get("tier", "")),
+                    )
+                    mc_record(traj)
+                except Exception:
+                    pass
         else:
             print(f"  ✗ {inv['email']}")
 

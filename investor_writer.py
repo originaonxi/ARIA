@@ -5,9 +5,19 @@ Model: claude-haiku-4-5-20251001
 """
 
 import json
+import sys
+import os
 import anthropic
 
 from config import ANTHROPIC_API_KEY
+
+# MemCollab — cross-agent shared memory
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "memcollab"))
+try:
+    from memcollab import build_memory_injection
+    MEMCOLLAB_AVAILABLE = True
+except ImportError:
+    MEMCOLLAB_AVAILABLE = False
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -235,6 +245,12 @@ def write_cold_email(investor: dict, use_defense_profiling: bool = True) -> dict
 DEFENSE PROFILE (awareness: {defense['awareness_score']}/10, mode: {defense['defense_mode']}):
 BANNED WORDS — never use any of these phrases: {banned}
 WRITING STRATEGY: {bypass_instruction}"""
+
+    # MemCollab: inject cross-agent learned patterns
+    if defense and MEMCOLLAB_AVAILABLE:
+        memory_ctx = build_memory_injection(defense["defense_mode"], vertical="vc")
+        if memory_ctx:
+            system += memory_ctx
 
     user_prompt = f"""Write a cold email to this angel investor:
 
