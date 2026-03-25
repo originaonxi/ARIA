@@ -740,6 +740,8 @@ def cmd_send(dry_run: bool = False):
                         icp_tier=str(inv.get("tier", "")),
                     )
                     mc_record(traj)
+                    # Store trajectory_id for reply → update_outcome()
+                    db.update_investor(inv["id"], {"memcollab_tid": traj.trajectory_id})
                 except Exception:
                     pass
         else:

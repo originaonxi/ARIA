@@ -4,7 +4,10 @@ Updates SQLite + Airtable. Sends HOT alerts to owner.
 """
 
 import json
+import os
+import sys
 import smtplib
+from datetime import datetime, timezone
 from email.mime.text import MIMEText
 
 import anthropic
@@ -13,6 +16,25 @@ from config import ANTHROPIC_API_KEY, OWNER_EMAIL, SMTP_USER, SMTP_PASS
 from aria_db import get_investor_by_email, mark_replied, update_investor
 from instantly_client import get_new_replies
 from airtable_sync import update_status
+
+# MemCollab — update trajectory outcomes on reply
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "memcollab"))
+try:
+    from memcollab import update_outcome as mc_update_outcome, Outcome
+    MEMCOLLAB_AVAILABLE = True
+except ImportError:
+    MEMCOLLAB_AVAILABLE = False
+
+# Map ARIA sentiment → MemCollab Outcome
+SENTIMENT_TO_OUTCOME = {
+    "INTERESTED": "HOT",
+    "OBJECTION": "OBJECTION",
+    "NOT_NOW": "NOT_NOW",
+    "NEGATIVE": "UNSUBSCRIBE",
+    "REFERRAL": "NOT_NOW",
+    "AUTO_REPLY": None,  # skip — not a real response
+    "UNKNOWN": None,
+}
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -151,6 +173,21 @@ def process_replies(campaign_id: str = None) -> dict:
                 "REPLIED",
                 replied=True,
             )
+
+        # MemCollab: update trajectory outcome
+        if MEMCOLLAB_AVAILABLE:
+            try:
+                tid = investor.get("memcollab_tid") or ""
+                if tid:
+                    mc_outcome = SENTIMENT_TO_OUTCOME.get(sentiment)
+                    if mc_outcome:
+                        mc_update_outcome(
+                            tid, mc_outcome,
+                            reply_text=reply_text[:200],
+                            latency_hours=0.0,
+                        )
+            except Exception:
+                pass
 
         # Alert on INTERESTED
         if sentiment == "INTERESTED":
